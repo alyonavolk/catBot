@@ -3,39 +3,27 @@ import { IRandCat } from "./IRandCat";
 
 export class RandCat implements IRandCat {
     table: AirtableBase;
-    arrayId: string[] = [];
 
     constructor(table: AirtableBase) {
         this.table = table;
     }
 
     async getIdArray(table: string) {
-        this.arrayId = [];
+        const arrayId: string[] = [];
         await this.table(table).select()
-        .eachPage((records, fetchNextPage) => {
-            try {
-                records.forEach((record: { getId: () => string; }) => {
-                    console.log(record.getId());
-                    this.arrayId.push(record.getId());
-                });
-                fetchNextPage();
-            } catch(e){ console.log('error inside eachPage => ',e)
-        }}, (err) => {
+        .firstPage((err, records) => {
             if (err) { console.error(err); return; }
+            records?.forEach((record) => {
+                console.log(record.getId());
+                arrayId.push(record.getId());
+            });
         });
-        console.log('длина массива massJoke : ' + this.arrayId.length);
-        for(let i = 0; i < this.arrayId.length; i++) {
-            console.log(`id массива getIdArray ${i}: ${this.arrayId[i]}`);
-        }
+        return arrayId;
     }
 
-    randCat(defCat: string): string {
-        for(let i = 0; i < this.arrayId.length; i++) {
-            console.log(`id массива randCat ${i}: ${this.arrayId[i]}`);
-        }
-        const rd: number = Math.floor(Math.random() * (this.arrayId.length + 1));
-        console.log('random cat: ' + this.arrayId[rd]);
-        return this.arrayId[rd] == undefined ? defCat : this.arrayId[rd];
+    randCat(defCat: string, arrayId: string[]): string {
+        const rd: number = Math.floor(Math.random() * (arrayId.length + 1));
+        return arrayId[rd] == undefined ? defCat : arrayId[rd];
     }
 
     async getCat(table: string, rd: string) {
